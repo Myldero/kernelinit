@@ -1,4 +1,4 @@
-CC = gcc
+CC = musl-gcc
 CFLAGS = -Wall -Wextra -O0 -static -ggdb -masm=intel
 
 SOURCES = $(wildcard exploit-src/*.c)
