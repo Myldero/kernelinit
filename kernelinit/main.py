@@ -154,6 +154,8 @@ def create_files(cmd: str, args, cpio: str):
     with open('./debug.gdb', 'w') as f:
         print("target remote :1234", file=f)
         ko_file = get_ko_file(cpio)
+        print('add-symbol-file vmlinux', file=f)
+        print('add-symbol-file exploit', file=f)
         if ko_file:
             print(f"add-symbol-file {ko_file} 0xffffffffc0000000", file=f)
 
@@ -174,7 +176,7 @@ def create_files(cmd: str, args, cpio: str):
 
 
 def do_unintended_checks(cmd: str):
-    info("Beginning unintended checks. This may take some time...")
+    info("Running unintended checks...")
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     def send_cmd(c):
         child.sendline(c); child.readline()
@@ -212,10 +214,24 @@ def do_unintended_checks(cmd: str):
     child.sendeof()
 
 
+def extract_vmlinux():
+    bzimage = get_file('bzImage')
+    if os.path.exists("vmlinux"):
+        shutil.move("vmlinux", "vmlinux - backup")
+
+    info("Extracting vmlinux...")
+    out = subprocess.check_output(['vmlinux-to-elf', bzimage, 'vmlinux'])
+    if b'Successfully wrote the new ELF kernel to vmlinux' in out:
+        info('Successfully wrote the new ELF kernel to vmlinux')
+    else:
+        error('Failed extracting vmlinux')
+
+
 def main() -> None:
     cmd, args, cpio = check_runfile_args()
     create_files(cmd, args, cpio)
     do_unintended_checks(unparameterize(create_release_run(cmd, args, cpio)))
+    extract_vmlinux()
 
 
 if __name__ == '__main__':

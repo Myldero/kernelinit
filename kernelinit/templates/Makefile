@@ -1,5 +1,5 @@
 CC = musl-gcc
-CFLAGS = -Wall -Wextra -O0 -static -ggdb -masm=intel
+CFLAGS = -Wall -Wextra -O0 -static -ggdb -masm=intel -no-pie
 
 SOURCES = $(wildcard exploit-src/*.c)
 OBJECTS = $(SOURCES:.c=.o)
