@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "kernelinit"
+version = "1.1.0"
+description = "A tool for automating setup of kernel pwn challenges"
+authors = ["Myldero"]
+readme = "README.md"
+homepage = "https://github.com/Myldero/kernelinit"
+repository = "https://github.com/Myldero/kernelinit"
+exclude = []
+include = ["kernelinit/templates/*"]
+license = "MIT"
+classifiers = [
+    'Environment :: Console',
+    'Programming Language :: Python :: 3',
+    'Topic :: Security',
+]
+packages = [
+    { include = "kernelinit" }
+]
+
+[tool.poetry.scripts]
+kernelinit = 'kernelinit.main:main'
+
+[tool.poetry.dependencies]
+python-libarchive = '^4.2.1'
+pexpect = '^4.8.0'
+vmlinux-to-elf = { git = "https://github.com/marin-m/vmlinux-to-elf.git", rev = "3ff66e1" }
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

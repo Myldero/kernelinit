@@ -1,7 +1,25 @@
-from typing import List
+from typing import List, Optional
+import glob
+import os
+
+
+TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates')
+
+
+def get_file(expr: str) -> Optional[str]:
+    """
+    Recursively look for filename
+    """
+    l = glob.glob(f"**/{expr}", recursive=True)
+    if l:
+        return l[0]
+    return None
 
 
 def parameterize(cmd: str) -> List[str]:
+    """
+    Create argument list from bash command
+    """
     out = []
     curr = ""
     quote = None
@@ -33,11 +51,23 @@ def parameterize(cmd: str) -> List[str]:
     return out
 
 
-def unparameterize(cmd: List[str]) -> str:
-    return " ".join(repr(i) if ' ' in i else i for i in cmd)
+def unparameterize(cmd: List[str], pretty: bool = False) -> str:
+    """
+    Create bash command from argument list
+    """
+    out = ""
+    for arg in cmd:
+        if pretty and arg.startswith("-"):
+            out += " \\\n    "
+        elif out:
+            out += " "
+        if any(i in arg for i in (' ', '"', "'")):
+            out += repr(arg)
+        else:
+            out += arg
+    return out
 
 
-DEBUG = True
 ANSI_RESET  = "\u001b[0m"
 ANSI_YELLOW = "\u001b[33m"
 ANSI_BLUE   = "\u001b[34m"
@@ -51,8 +81,12 @@ def info(*args, **kwargs):
     print(f"{ANSI_BLUE}[INFO]{ANSI_RESET}", *args, **kwargs)
 
 def debug(*args, **kwargs):
-    if DEBUG:
+    if hasattr(debug, 'verbose') and debug.verbose:
         print(f"{ANSI_CYAN}[DEBUG]{ANSI_RESET}", *args, **kwargs)
 
 def error(*args, **kwargs):
     print(f"{ANSI_RED}[ERROR]{ANSI_RESET}", *args, **kwargs)
+
+def fatal(*args, **kwargs):
+    error(*args, **kwargs)
+    exit(-1)
