@@ -80,12 +80,23 @@ def extract_vmlinux(runfile: RunFile):
         shutil.move("vmlinux", "vmlinux - backup")
 
     info("Extracting vmlinux...")
-    out = subprocess.check_output(['vmlinux-to-elf', '--', runfile.args.kernel, 'vmlinux'])
-    if b'Successfully wrote the new ELF kernel to vmlinux' in out:
+    out = b''
+    try:
+        out = subprocess.run(['vmlinux-to-elf', '--', runfile.args.kernel, 'vmlinux'],
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
+    except FileNotFoundError:
+        error("Missing vmlinux-to-elf in PATH")
+
+    if b'Successfully wrote the new ELF kernel' in out:
         info('Successfully extracted vmlinux')
     else:
-        error('Failed extracting vmlinux')
-
+        error('Failed extracting vmlinux using vmlinux-to-elf')
+        if out:
+            debug("vmlinux-to-elf output:\n" + out.decode())
+        out = subprocess.check_output([os.path.join(TEMPLATES_DIR, "..", "extract-vmlinux"), runfile.args.kernel])
+        with open('vmlinux', 'wb') as f:
+            f.write(out)
+        info("Successfully extracted vmlinux using extract-vmlinux")
 
 def cleanup_files():
     """
