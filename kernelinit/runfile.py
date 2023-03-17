@@ -19,7 +19,8 @@ class RunFile:
 
         self.args = parse_qemu_arguments(runfile_args)
 
-        self.args.initrd = get_cpio(cpio or self.args.initrd, no_files)
+        self.args.initrd = get_cpio(cpio or self.args.initrd)
+        self.initrd_gzipped = self.args.initrd.endswith(".gz")
         self.args.kernel = bzImage or self.args.kernel
         if not os.path.isfile(self.args.kernel):
             self.args.kernel = get_file('bzImage')
@@ -82,7 +83,11 @@ class RunFile:
                 l += [key]
         return l
 
-    def create_debug_run(self, cpio='my-rootfs.cpio') -> List[str]:
+    def create_debug_run(self, cpio=None) -> List[str]:
+        if not cpio:
+            cpio = 'my-rootfs.cpio'
+            if self.initrd_gzipped:
+                cpio += '.gz'
         l = self.create_release_run(cpio=cpio, kernel_args=[('loglevel', 'loglevel=7'),
                                                        ("panic", "panic=0"),
                                                        ("kaslr", "nokaslr")])
@@ -113,7 +118,7 @@ def set_vm_arg(vm_args: List[str], target_key: str, target_value: str) -> None:
     vm_args.append(target_value)
 
 
-def get_cpio(cpio: Optional[str], no_files: bool) -> str:
+def get_cpio(cpio: Optional[str]) -> str:
     if not os.path.isfile(cpio):
         cpio = get_file('*.cpio')
         if cpio:
@@ -121,9 +126,6 @@ def get_cpio(cpio: Optional[str], no_files: bool) -> str:
         cpio = get_file('*.cpio.gz')
         if not cpio:
             fatal("No cpio file found")
-    if cpio.endswith(".gz") and not no_files:
-        subprocess.check_output(["gunzip", "-k", "--", cpio])
-        return cpio[:-3]
     return cpio
 
 
@@ -151,6 +153,7 @@ def parse_qemu_arguments(runfile_args: List[str]) -> argparse.Namespace:
     parser.add_argument("-accel")
     parser.add_argument("-net", action="append")
     parser.add_argument("-netdev", action="append")
+    parser.add_argument("-drive", action="append")
     parser.add_argument("-chardev", action="append")
     parser.add_argument("-tpmdev", action="append")
     parser.add_argument("-numa", action="append")
