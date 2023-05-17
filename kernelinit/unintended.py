@@ -42,9 +42,15 @@ def do_unintended_checks(runfile: RunFile):
     child = pexpect.spawn(cmd)
     try:
         child.expect_exact(b'$ ', timeout=60)
-    except pexpect.exceptions.TIMEOUT as e:
-        error("Unintended checks failed due to time out")
-        print(e)
+    except Exception as e:
+        if isinstance(e, pexpect.exceptions.TIMEOUT):
+            reason = "time out"
+        elif isinstance(e, pexpect.exceptions.EOF):
+            reason = "EOF"
+        else:
+            reason = "unknown error"
+        error(f"Unintended checks failed due to {reason}")
+        debug(e)
         child.sendeof()
         child.kill(9)
         return

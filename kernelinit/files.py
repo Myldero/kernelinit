@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import subprocess
 
@@ -22,7 +23,7 @@ def get_ko_file(cpio: str) -> Optional[str]:
 
     with libarchive.Archive(cpio) as a:
         for entry in a:
-            if entry.pathname.endswith(".ko") and not entry.pathname.startswith("lib/modules"):
+            if entry.pathname.endswith(".ko") and not re.match(r'lib/modules/[^/]+/kernel/', entry.pathname):
                 filename = os.path.basename(entry.pathname)
                 with open(filename, 'wb') as f:
                     f.write(a.read(entry.size))

@@ -35,7 +35,7 @@ def main() -> None:
         cleanup_files()
         return
 
-    runfile = RunFile(args.runfile, args.cpio, args.bzImage, args.no_files)
+    runfile = RunFile(args.runfile, args.cpio, args.bzImage)
     runfile.check_args()
     create_files(runfile, args)
     do_unintended_checks(runfile)

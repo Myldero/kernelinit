@@ -7,7 +7,7 @@ from .utils import get_file, parameterize, info, important, fatal, debug
 
 
 class RunFile:
-    def __init__(self, filename: str = None, cpio: str = None, bzImage: str = None, no_files: bool = False):
+    def __init__(self, filename: str = None, cpio: str = None, bzImage: str = None):
         if filename is not None and not os.path.isfile(filename):
             fatal(f"Runfile {repr(filename)} does not exist")
         self.filename = filename or get_file('run*.sh') or get_file(r'start*.sh')
@@ -16,6 +16,7 @@ class RunFile:
         with open(self.filename, 'r') as f:
             s = f.read()
         self.cmd, *runfile_args = parameterize(s[s.find("qemu-system"):])
+        self.arch = self.cmd[12:]
 
         self.args = parse_qemu_arguments(runfile_args)
 
@@ -34,8 +35,8 @@ class RunFile:
         cpu_args = self.args.cpu.split(',') if self.args.cpu else []
         vm_args = self.args.append.split() if self.args.append else []
 
-        if self.args.monitor is None:
-            important("No '-monitor' flag. Unintended using QEMU Monitor")
+        if self.args.monitor is None or self.args.serial == 'mon:stdio':
+            important("Unintended using QEMU Monitor")
 
         if not any(i in cpu_args for i in ('smep', '+smep')):
             info("No SMEP")
@@ -53,6 +54,10 @@ class RunFile:
 
         if get_vm_arg(vm_args, 'nokaslr'):
             info("No KASLR")
+
+        if (get_vm_arg(vm_args, 'pti') == 'on' and self.arch == 'x86_64') or \
+           (get_vm_arg(vm_args, 'kpti') == '1' and self.arch == 'aarch64'):
+            info("Page Table Isolation (pti) enabled")
 
         if int(get_vm_arg(vm_args, 'loglevel', '7')) > 0:
             info("Can leak info using kernel panics")
