@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kernelinit"
-version = "1.1.3"
+version = "1.1.4"
 description = "A tool for automating setup of kernel pwn challenges"
 authors = ["Myldero"]
 readme = "README.md"
@@ -24,7 +24,7 @@ kernelinit = 'kernelinit.main:main'
 [tool.poetry.dependencies]
 python-libarchive = '^4.2.1'
 pexpect = '^4.8.0'
-vmlinux-to-elf = { git = "https://github.com/marin-m/vmlinux-to-elf.git", rev = "bd49551" }
+vmlinux-to-elf = { git = "https://github.com/Myldero/vmlinux-to-elf.git", rev = "master" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

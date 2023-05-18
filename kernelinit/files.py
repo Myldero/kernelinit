@@ -88,7 +88,7 @@ def extract_vmlinux(runfile: RunFile):
     info("Extracting vmlinux...")
     out = b''
     try:
-        out = subprocess.run(['vmlinux-to-elf', '--', runfile.args.kernel, 'vmlinux'],
+        out = subprocess.run(['vmlinux-to-elf', '--arch', runfile.arch, '--', runfile.args.kernel, 'vmlinux'],
                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
     except FileNotFoundError:
         error("Missing vmlinux-to-elf in PATH")
