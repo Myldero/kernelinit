@@ -59,9 +59,6 @@ class RunFile:
            (get_vm_arg(vm_args, 'kpti') == '1' and self.arch == 'aarch64'):
             info("Page Table Isolation (pti) enabled")
 
-        if int(get_vm_arg(vm_args, 'loglevel', '7')) > 0:
-            info("Can leak info using kernel panics")
-
         if get_vm_arg(vm_args, 'oops') != 'panic':
             info("Kernel panics will not crash qemu")
 
