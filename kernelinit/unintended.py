@@ -13,9 +13,14 @@ def do_unintended_checks(runfile: RunFile):
     cmd = unparameterize(runfile.create_release_run())
 
     info("Running unintended checks...")
+
+    if '$' in cmd:
+        error("Shell variable detected in runfile. Created runfile might not work")
+
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     def send_cmd(c):
-        child.sendline(c); child.readline()
+        child.sendline(c)
+        child.readline()
         child.expect_exact(b'$ ')
         return ansi_escape.sub('', child.before.decode(errors='ignore'))
 
@@ -35,13 +40,16 @@ def do_unintended_checks(runfile: RunFile):
             new_name = re.findall(f'{dirname} -> (.*\S)', out)[0]
             get_writable(os.path.normpath(os.path.join(os.path.dirname(dirname), new_name)), message)
             return
-        perms, _, fuid, *_ = out.split()
-        if perms[-3:-1] == 'rw' or fuid in (uid, uidname):
+        perms, _, fuid, fgid, *_ = out.split()
+        if perms[7:9] == 'rw' or fuid in (uid, uidname) or (perms[4:6] == 'rw' and fgid in (gid, gidname)):
             important(f"Write-access to '{dirname}'.", message)
 
     child = pexpect.spawn(cmd)
     try:
-        child.expect_exact(b'$ ', timeout=60)
+        child.expect_exact(b'$ ', timeout=30)
+        child.sendline("echo 'kernelinit'washere")
+        child.expect_exact(b'kernelinitwashere', timeout=5)
+        child.readline()
     except Exception as e:
         if isinstance(e, pexpect.exceptions.TIMEOUT):
             reason = "time out"
@@ -57,7 +65,9 @@ def do_unintended_checks(runfile: RunFile):
     my_id = send_cmd('id').strip().split()
     uid, *uidname = my_id[0][4:].split("(")
     uidname = uidname[0][:-1] if uidname else None
-    debug("uid:", uid, uidname)
+    gid, *gidname = my_id[1][4:].split("(")
+    gidname = gidname[0][:-1] if gidname else None
+    debug(f"uid={uid}({uidname}) gid={gid}({gidname})")
     get_writable('/sbin/modprobe', message='Unintended by hijacking /sbin/modprobe')
     get_writable('/etc/passwd', message='Unintended by overwriting /etc/passwd (If busybox is SUID)')
     child.sendeof()
