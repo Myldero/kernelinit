@@ -17,6 +17,14 @@ def do_unintended_checks(runfile: RunFile):
     if '$' in cmd:
         error("Shell variable detected in runfile. Created runfile might not work")
 
+        # Try to remove the arguments with shell variables to at least try to run the unintended checks
+        args = runfile.create_release_run()
+        for i in range(1, len(args)):
+            if '$' in args[i]:
+                args[i-1] = None
+                args[i] = None
+        cmd = unparameterize([i for i in args if i is not None])
+
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     def send_cmd(c):
         child.sendline(c)

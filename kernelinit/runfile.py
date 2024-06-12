@@ -3,7 +3,7 @@ import subprocess
 import argparse
 from typing import Tuple, Dict, List, Union, Optional
 
-from .utils import get_file, parameterize, info, important, fatal, debug
+from .utils import get_file, parameterize, info, important, fatal, debug, error
 
 
 class RunFile:
@@ -146,6 +146,7 @@ def parse_qemu_arguments(runfile_args: List[str]) -> argparse.Namespace:
     parser.add_argument("-no-reboot", action="store_true")
     parser.add_argument("-no-shutdown", action="store_true")
     parser.add_argument("-enable-kvm", action="store_true")
+    parser.add_argument("-snapshot", action="store_true")
     parser.add_argument("-monitor")
     parser.add_argument("-display")
     parser.add_argument("-kernel")
@@ -158,7 +159,6 @@ def parse_qemu_arguments(runfile_args: List[str]) -> argparse.Namespace:
     parser.add_argument("-machine")
     parser.add_argument("-accel")
     parser.add_argument("-boot")
-    parser.add_argument("-snapshot")
     parser.add_argument("-L")
     parser.add_argument("-hda")
     parser.add_argument("-hdb")
@@ -180,7 +180,9 @@ def parse_qemu_arguments(runfile_args: List[str]) -> argparse.Namespace:
 
     args, ignored = parser.parse_known_args(runfile_args)
     if args is None:
-        fatal(f"Runfile contains invalid command:", *errors, sep="\n")
+        fatal(f"Runfile contains invalid command:" + "* \n".join(errors))
+    elif errors:
+        error(f"Non-fatal errors when parsing runfile:\n- " + "* \n".join(errors))
 
     if ignored:
         debug("The following runfile arguments were ignored:", *ignored)
