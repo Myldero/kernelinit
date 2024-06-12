@@ -119,19 +119,26 @@ def inspect_kernel_config():
     symbols = set([i.split()[-1] for i in out.split("\n")])
 
     interesting = [
-        (('init_cred',), True, 'KALLSYMS_ALL disabled'),                           # CONFIG_KALLSYMS_ALL
-        (('handle_userfault', 'dup_userfaultfd',), False, 'USERFAULTFD enabled'),  # CONFIG_USERFAULTFD
-        (('fuse_do_open',), False, 'FUSE_FS enabled'),                             # CONFIG_FUSE_FS
-        (('bpf_ksym_add',), False, 'BPF_JIT enabled'),                             # CONFIG_BPF_JIT
-        (('nf_tables_net_id', 'nft_do_chain',), False, 'NF_TABLES enabled'),       # CONFIG_NF_TABLES
-        (('make_kuid',), False, 'USER_NS enabled'),                                # CONFIG_USER_NS
-        (('__kasan_kmalloc',), False, 'KASAN enabled'),                            # CONFIG_KASAN
-        (('pti_check_boottime_disable',), True, 'PTI disabled'),                   # CONFIG_PAGE_TABLE_ISOLATION
-        (('kaslr_get_random_long',), True, 'KASLR disabled'),                      # CONFIG_RANDOMIZE_BASE
-        (('__stack_chk_fail',), True, 'No Stack Canary'),                          # CONFIG_STACKPROTECTOR
-        (('handle_cfi_failure',), False, 'kCFI enabled'),                          # CONFIG_CFI_CLANG
-        (('mod_objcg_state',), False, 'kmalloc-cg- enabled'),                      # CONFIG_MEMCG_KMEM
-        (('random_kmalloc_seed',), False, 'kmalloc-rnd- enabled'),                 # CONFIG_RANDOM_KMALLOC_CACHES
+        (('init_cred',), True, 'KALLSYMS_ALL disabled'),                      # CONFIG_KALLSYMS_ALL
+        (('handle_userfault',), False, 'USERFAULTFD enabled'),                # CONFIG_USERFAULTFD
+        (('fuse_do_open',), False, 'FUSE_FS enabled'),                        # CONFIG_FUSE_FS
+        (('bpf_ksym_add',), False, 'BPF_JIT enabled'),                        # CONFIG_BPF_JIT
+        (('ksys_msgget',), True, 'msg_msg not available'),                    # CONFIG_SYSVIPC
+        (('user_preparse',), True, 'user_key_payload not available'),         # CONFIG_KEYS
+        (('nft_do_chain',), False, 'NF_TABLES enabled'),                      # CONFIG_NF_TABLES
+        (('make_kuid',), False, 'USER_NS enabled'),                           # CONFIG_USER_NS
+        (('__kasan_kmalloc',), False, 'KASAN enabled'),                       # CONFIG_KASAN
+        (('__kfence_pool',), False, 'KFENCE enabled'),                        # CONFIG_KFENCE
+        (('pti_check_boottime_disable',), True, 'PTI disabled'),              # CONFIG_PAGE_TABLE_ISOLATION
+        (('kaslr_get_random_long',), True, 'KASLR disabled'),                 # CONFIG_RANDOMIZE_BASE
+        (('__stack_chk_fail',), True, 'No Stack Canary'),                     # CONFIG_STACKPROTECTOR
+        (('init_shadow_call_stack',), False, 'Shadow stack enabled'),         # CONFIG_SHADOW_CALL_STACK
+        (('handle_cfi_failure',), False, 'kCFI enabled'),                     # CONFIG_CFI_CLANG
+        (('mod_objcg_state',), False, 'kmalloc-cg- enabled'),                 # CONFIG_MEMCG_KMEM
+        (('random_kmalloc_seed',), False, 'kmalloc-rnd- enabled'),            # CONFIG_RANDOM_KMALLOC_CACHES
+        (('init_cache_random_seq',), False, 'SLAB_FREELIST_RANDOM enabled'),  # CONFIG_SLAB_FREELIST_RANDOM
+        (('usercopy_abort',), False, 'HARDENED_USERCOPY enabled'),            # CONFIG_HARDENED_USERCOPY
+        (('__list_add_valid_or_report',), False, 'LIST_HARDENED enabled'),    # CONFIG_LIST_HARDENED
     ]
 
     for targets, invert, msg in interesting:
