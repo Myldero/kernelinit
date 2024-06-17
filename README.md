@@ -13,7 +13,7 @@ Your exploit code is placed in `exploit-src`
 Compile and run QEMU with `make`  
 `make debug` is just an alias for `gdb -x debug.gdb`  
 To become root inside QEMU, run `/makeroot`, which is a setuid binary that gives you root.  
-In some challenges, setuid binaries are stripped. In this case, try uncommenting line 20 in the Makefile.
+In some challenges, setuid binaries are stripped. In this case, try uncommenting line 24 in the Makefile.
 
 If you want to modify the exploit template, type `kernelinit -h` to get the path to the templates directory. If you change it, 
 be wary that changes will be overwritten when you update this package. 
@@ -29,12 +29,15 @@ $ ls
 bzImage  rootfs.cpio  run.sh
 $ kernelinit
 [INFO] No SMEP
+[INFO] No SMAP
 [INFO] No KASLR
-[INFO] Can leak info using kernel panics
-[INFO] Running unintended checks...
 [INFO] Extracting vmlinux...
+[INFO] Running unintended checks...
 [INFO] Finished unintended checks
 [INFO] Successfully extracted vmlinux
-$ ls
-bzImage  debug.gdb  example.ko	exploit-src  Makefile  makeroot  my-run.sh  rootfs.cpio  run.sh  vmlinux
+[INFO] CONFIG: FUSE_FS enabled
+[INFO] CONFIG: USER_NS enabled
+[INFO] CONFIG: kmalloc-cg- enabled
+$ ls -F
+bzImage  example.ko  exploit-src/  kernelinit/  Makefile  rootfs.cpio  run.sh*  vmlinux
 ```

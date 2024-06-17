@@ -86,10 +86,6 @@ class RunFile:
         return l
 
     def create_debug_run(self, cpio=None) -> List[str]:
-        if not cpio:
-            cpio = 'my-rootfs.cpio'
-            if self.initrd_gzipped:
-                cpio += '.gz'
         l = self.create_release_run(cpio=cpio, kernel_args=[('loglevel', 'loglevel=7'),
                                                        ("panic", "panic=0"),
                                                        ("kaslr", "nokaslr")])

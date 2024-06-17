@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <kernelconfig.h>
 
+#ifdef CONFIG_X86_64
+
 //#define CONFIG_DEBUG_LOCK_ALLOC (Not supported)
 //#define CONFIG_DEBUG_KOBJECT_RELEASE (Not supported)
 
@@ -657,3 +659,5 @@ struct kmem_cache __kmem_cache;
 struct file __file;
 struct page __page;
 enum pageflags test;
+
+#endif /* CONFIG_x86_64 */

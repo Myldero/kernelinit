@@ -7,33 +7,34 @@ SOURCES = $(wildcard exploit-src/*.c)
 OBJECTS = $(SOURCES:.c=.o)
 LIBS = -lpthread
 
-kernelsymbols.o:
-	gcc -c -g -I. "TEMPLATES_DIR/kernelsymbols.c" -o $@
+kernelinit/kernelsymbols.o: kernelinit/kernelconfig.h
+	gcc -c -g -I./kernelinit "TEMPLATES_DIR/kernelsymbols.c" -o $@
 
-debug: kernelsymbols.o
-	gdb -x debug.gdb
+debug: kernelinit/kernelsymbols.o
+	gdb -x kernelinit/debug.gdb
 
 run: cpio
-	./my-run.sh
+	./kernelinit/my-run.sh
 
 cpio: exploit
-	cp CPIOFILE my-rootfs.cpio
-	chmod u+s makeroot
-	find exploit makeroot | cpio -A -F my-rootfs.cpio -o -H newc --owner=+0.+0
-	chmod u-s makeroot
-	#sed -i 's/cttyhack setuidgid 1000/cttyhack setuidgid    0/g' my-rootfs.cpio
-	#gzip -f my-rootfs.cpio
+	cp CPIOFILE kernelinit/my-rootfs.cpio
+	chmod u+s kernelinit/makeroot
+	printf 'exploit\nmakeroot\n' | cpio -D kernelinit -A -F kernelinit/my-rootfs.cpio -o -H newc --owner=+0.+0
+	chmod u-s kernelinit/makeroot
+	#sed -i 's/cttyhack setuidgid 1000/cttyhack setuidgid    0/g' kernelinit/my-rootfs.cpio
+	#gzip -f kernelinit/my-rootfs.cpio
 
-build: exploit
-
-exploit: $(OBJECTS)
+kernelinit/exploit: $(OBJECTS)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+
+exploit: kernelinit/exploit
 
 release: $(OBJECTS)
 	$(CC) $(RELEASE_CFLAGS) $^ $(LIBS) -o exploit
+	gzip -9 exploit
 
 clean:
-	rm -f exploit my-rootfs.cpio my-rootfs.cpio.gz $(OBJECTS)
+	rm -f kernelinit/exploit kernelinit/my-rootfs.cpio kernelinit/my-rootfs.cpio.gz kernelinit/kernelsymbols.o $(OBJECTS)
 
-.PHONY: run debug clean
+.PHONY: run debug cpio exploit release clean
 .DEFAULT_GOAL := run
