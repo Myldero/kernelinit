@@ -7,7 +7,10 @@ SOURCES = $(wildcard exploit-src/*.c)
 OBJECTS = $(SOURCES:.c=.o)
 LIBS = -lpthread
 
-debug:
+kernelsymbols.o:
+	gcc -c -g -I. "TEMPLATES_DIR/kernelsymbols.c" -o $@
+
+debug: kernelsymbols.o
 	gdb -x debug.gdb
 
 run: cpio

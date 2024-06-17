@@ -35,6 +35,7 @@ def create_files(runfile: RunFile, args: argparse.Namespace):
     Create template files
     """
     if args.no_files:
+        inspect_kernel_config()
         return
 
     with open('./my-run.sh', 'w') as f:
@@ -55,9 +56,14 @@ def create_files(runfile: RunFile, args: argparse.Namespace):
         ko_file = get_ko_file(runfile.args.initrd)
         if ko_file:
             print(f"add-symbol-file {ko_file} 0xffffffffc0000000", file=f)
+        print('add-symbol-file kernelsymbols.o', file=f)
+        print('set exception-verbose on', file=f)
+
+    open('./kernelconfig.h', 'a').close()
 
     with open(os.path.join(TEMPLATES_DIR, 'Makefile'), 'r') as f:
-        makefile = f.read().replace("CPIOFILE", runfile.args.initrd.replace(".gz", ""))
+        makefile = f.read().replace("CPIOFILE", runfile.args.initrd.replace(".gz", "")) \
+                           .replace("TEMPLATES_DIR", TEMPLATES_DIR)
         if runfile.initrd_gzipped:
             makefile = makefile.replace("#gzip", "gzip")
     with open('./Makefile', 'w') as f:
@@ -116,35 +122,83 @@ def inspect_kernel_config():
         error("No symbols in vmlinux")
         return
 
-    symbols = set([i.split()[-1] for i in out.split("\n")])
+    out = [i.split() for i in out.split("\n")]
 
-    interesting = [
-        (('init_cred',), True, 'KALLSYMS_ALL disabled'),                      # CONFIG_KALLSYMS_ALL
-        (('handle_userfault',), False, 'USERFAULTFD enabled'),                # CONFIG_USERFAULTFD
-        (('fuse_do_open',), False, 'FUSE_FS enabled'),                        # CONFIG_FUSE_FS
-        (('bpf_ksym_add',), False, 'BPF_JIT enabled'),                        # CONFIG_BPF_JIT
-        (('ksys_msgget',), True, 'msg_msg not available'),                    # CONFIG_SYSVIPC
-        (('user_preparse',), True, 'user_key_payload not available'),         # CONFIG_KEYS
-        (('nft_do_chain',), False, 'NF_TABLES enabled'),                      # CONFIG_NF_TABLES
-        (('make_kuid',), False, 'USER_NS enabled'),                           # CONFIG_USER_NS
-        (('__kasan_kmalloc',), False, 'KASAN enabled'),                       # CONFIG_KASAN
-        (('__kfence_pool',), False, 'KFENCE enabled'),                        # CONFIG_KFENCE
-        (('pti_check_boottime_disable',), True, 'PTI disabled'),              # CONFIG_PAGE_TABLE_ISOLATION
-        (('kaslr_get_random_long',), True, 'KASLR disabled'),                 # CONFIG_RANDOMIZE_BASE
-        (('__stack_chk_fail',), True, 'No Stack Canary'),                     # CONFIG_STACKPROTECTOR
-        (('init_shadow_call_stack',), False, 'Shadow stack enabled'),         # CONFIG_SHADOW_CALL_STACK
-        (('handle_cfi_failure',), False, 'kCFI enabled'),                     # CONFIG_CFI_CLANG
-        (('mod_objcg_state',), False, 'kmalloc-cg- enabled'),                 # CONFIG_MEMCG_KMEM
-        (('random_kmalloc_seed',), False, 'kmalloc-rnd- enabled'),            # CONFIG_RANDOM_KMALLOC_CACHES
-        (('init_cache_random_seq',), False, 'SLAB_FREELIST_RANDOM enabled'),  # CONFIG_SLAB_FREELIST_RANDOM
-        (('usercopy_abort',), False, 'HARDENED_USERCOPY enabled'),            # CONFIG_HARDENED_USERCOPY
-        (('__list_add_valid_or_report',), False, 'LIST_HARDENED enabled'),    # CONFIG_LIST_HARDENED
+    symbols = {i[-1].rsplit('.', 1)[0]: int(i[0], 16) if len(i[0]) == 16 else 0 for i in out}
+
+    config = {}
+
+    # Get config options based on presence of symbols
+    interesting_symbols = [
+        (('init_cred',), False, True, 'KALLSYMS_ALL disabled', 'KALLSYMS_ALL'),
+        (('handle_userfault',), False, False, 'USERFAULTFD enabled', 'USERFAULTFD'),
+        (('fuse_do_open',), False, False, 'FUSE_FS enabled', 'FUSE_FS'),
+        (('bpf_ksym_add',), False, False, 'BPF_JIT enabled', 'BPF_JIT'),
+        (('ksys_msgget',), False, True, 'msg_msg not available', 'SYSVIPC'),
+        (('user_preparse',), False, True, 'user_key_payload not available', 'KEYS'),
+        (('nft_do_chain',), False, False, 'NF_TABLES enabled', 'NF_TABLES'),
+        (('make_kuid',), False, False, 'USER_NS enabled', 'USER_NS'),
+        (('__kasan_kmalloc',), False, False, 'KASAN enabled', 'KASAN'),
+        (('kasan_cache_create',), False, False, None, 'KASAN_GENERIC'),
+        (('__kfence_pool',), False, False, 'KFENCE enabled', 'KFENCE'),
+        (('pti_check_boottime_disable',), False, True, 'PTI disabled', 'PAGE_TABLE_ISOLATION'),
+        (('kaslr_get_random_long',), False, True, 'KASLR disabled', 'RANDOMIZE_BASE'),
+        (('__stack_chk_fail',), False, True, 'No Stack Canary', 'STACKPROTECTOR'),
+        (('init_shadow_call_stack',), False, False, 'Shadow stack enabled', 'SHADOW_CALL_STACK'),
+        (('handle_cfi_failure',), False, False, 'kCFI enabled', 'CFI_CLANG'),
+        (('mod_objcg_state',), False, False, 'kmalloc-cg- enabled', 'MEMCG_KMEM'),
+        (('random_kmalloc_seed',), False, False, 'kmalloc-rnd- enabled', 'RANDOM_KMALLOC_CACHES'),
+        (('usercopy_abort',), False, False, 'HARDENED_USERCOPY enabled', 'HARDENED_USERCOPY'),
+        (('__list_add_valid_or_report',), False, False, 'LIST_HARDENED enabled', 'LIST_HARDENED'),
+        (('init_cache_random_seq',), False, False, 'SLAB_FREELIST_RANDOM enabled', 'SLAB_FREELIST_RANDOM'),
+        ((), False, False, None, 'SLAB_FREELIST_HARDENED'),  # Can't be detected this way
+        (('flushwq',), True, False, None, 'SLUB_TINY'),
+        (('slub_set_cpu_partial', 'put_cpu_partial',), False, False, None, 'SLUB_CPU_PARTIAL'),
+        (('vma_ra_enabled_show',), False, False, None, 'SYSFS'),
+        (('node_reclaim',), False, False, None, 'NUMA'),
+        (('__fill_map', 'dump_unreclaimable_slab'), False, False, None, 'SLUB_DEBUG'),
+        (('memcg_to_vmpressure',), False, False, None, 'MEMCG'),
+        (('kunmap_high',), False, False, None, 'HIGHMEM'),
     ]
 
-    for targets, invert, msg in interesting:
-        if any(i in symbols for i in targets) ^ invert:
+    for targets, invert, msg_invert, msg, config_name in interesting_symbols:
+        is_enabled = any(i in symbols for i in targets) ^ invert
+        if msg is not None and is_enabled ^ msg_invert:
             info(f"CONFIG: {msg}")
+        config[config_name] = is_enabled
 
+
+    # Get config options based on size of symbols
+    def get_symbol_size(name):
+        if name not in symbols:
+            return None
+        addr = symbols[name]
+        next_addr = 2**64-1
+        for i in symbols.values():
+            if i > addr and i < next_addr:
+                next_addr = i
+        return next_addr - addr
+
+    config['MAXSMP'] = get_symbol_size('__per_cpu_offset') > 0x200
+    config['NODES_SHIFT'] = 10 if config['MAXSMP'] else 6
+    config['NR_CPUS_DEFAULT'] = 8192 if config['MAXSMP'] else 64
+
+    # Assume always set
+    config['CONFIG_X86_64'] = True
+    config['CONFIG_X86_VMX_FEATURE_NAMES'] = True
+    config['CONFIG_MMU'] = True
+
+    config_str = "// Generated by kernelinit\n"
+    for name, value in config.items():
+        if value is True:
+            config_str += f"#define CONFIG_{name}\n"
+        elif value is False:
+            config_str += f"//#define CONFIG_{name}\n"
+        else:
+            config_str += f"#define CONFIG_{name} {value}\n"
+
+    with open('kernelconfig.h', 'w') as f:
+        f.write(config_str)
 
 def cleanup_files():
     """
@@ -173,7 +227,9 @@ def cleanup_files():
     delete_safe('./my-run.sh')
     delete_safe('./Makefile')
     delete_safe('./debug.gdb')
+    delete_safe('./kernelconfig.h')
     try_remove('./makeroot')
+    try_remove('./kernelsymbols.o')
 
     if os.path.exists('./exploit-src'):
         try:
