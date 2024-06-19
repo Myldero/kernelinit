@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kernelinit"
-version = "1.2.0"
+version = "1.2.1"
 description = "A tool for automating setup of kernel pwn challenges"
 authors = ["Myldero"]
 readme = "README.md"

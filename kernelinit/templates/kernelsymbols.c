@@ -121,6 +121,7 @@ typedef union {
 	freelist_full_t full;
 } freelist_aba_t;
 
+#if KERNEL_VERSION >= 602
 struct slab {
 	unsigned long __page_flags;
 
@@ -163,6 +164,38 @@ struct slab {
 	unsigned long memcg_data;
 #endif
 };
+#else
+struct slab {
+	unsigned long __page_flags;
+
+	union {
+		struct list_head slab_list;
+		struct rcu_head rcu_head;
+#ifdef CONFIG_SLUB_CPU_PARTIAL
+		struct {
+			struct slab *next;
+			int slabs;	/* Nr of slabs left */
+		};
+#endif
+	};
+	struct kmem_cache *slab_cache;
+	/* Double-word boundary */
+	void *freelist;		/* first free object */
+	union {
+		unsigned long counters;
+		struct {
+			unsigned inuse:16;
+			unsigned objects:15;
+			unsigned frozen:1;
+		};
+	};
+	unsigned int __unused;
+	atomic_t __page_refcount;
+#ifdef CONFIG_MEMCG
+	unsigned long memcg_data;
+#endif
+};
+#endif /* KERNEL_VERSION */
 
 
 enum node_states {
@@ -647,11 +680,14 @@ struct file {};  // Pass debug info check in pwndbg
 
 
 struct list_head slab_caches;
-unsigned int nr_cpu_ids;
 unsigned long max_pfn;
 struct cpuinfo_x86 boot_cpu_data;
 char linux_banner[1];
+#ifdef CONFIG_SMP
+unsigned int nr_cpu_ids;
 unsigned long __per_cpu_offset[NR_CPUS];
+#endif
+
 nodemask_t node_states[NR_NODE_STATES];
 
 
