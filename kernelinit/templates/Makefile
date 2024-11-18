@@ -19,7 +19,7 @@ run: cpio
 cpio: exploit
 	cp CPIOFILE kernelinit/my-rootfs.cpio
 	chmod u+s kernelinit/makeroot
-	printf 'exploit\nmakeroot\n' | cpio -D kernelinit -A -F kernelinit/my-rootfs.cpio -o -H newc --owner=+0.+0
+	printf 'exploit\nmakeroot\n' | cpio -D "$(PWD)"/kernelinit -A -F kernelinit/my-rootfs.cpio -o -H newc --owner=+0.+0
 	chmod u-s kernelinit/makeroot
 	#sed -i 's/cttyhack setuidgid 1000/cttyhack setuidgid    0/g' kernelinit/my-rootfs.cpio
 	#gzip -f kernelinit/my-rootfs.cpio
