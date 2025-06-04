@@ -31,7 +31,8 @@ exploit: kernelinit/exploit
 
 release: $(OBJECTS)
 	$(CC) $(RELEASE_CFLAGS) $^ $(LIBS) -o exploit
-	gzip -9 exploit
+	gzip -9f exploit
+	(echo -n 'echo "'; cat exploit.gz | base64; echo '"|base64 -d|gunzip>./exp;chmod +x ./exp') > b64.txt
 
 clean:
 	rm -f kernelinit/exploit kernelinit/my-rootfs.cpio kernelinit/my-rootfs.cpio.gz kernelinit/kernelsymbols.o $(OBJECTS)
