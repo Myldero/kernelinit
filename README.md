@@ -3,7 +3,12 @@ A tool for automating setup of kernel pwn challenges.
 
 ## Installation
 ```sh
-python3 -m pip install git+https://github.com/Myldero/kernelinit
+pipx install git+https://github.com/Myldero/kernelinit
+```
+
+Currently, `kernelinit` depends on libarchive. On Ubuntu, it can be installed with
+```
+sudo apt install libarchive-dev
 ```
 
 ## Usage

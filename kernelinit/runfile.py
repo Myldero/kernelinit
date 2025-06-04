@@ -89,7 +89,8 @@ class RunFile:
         l = self.create_release_run(cpio=cpio, kernel_args=[('loglevel', 'loglevel=7'),
                                                        ("panic", "panic=0"),
                                                        ("kaslr", "nokaslr")])
-        l += ['-s']
+        if '-s' not in l:
+            l += ['-s']
         return l
 
 
@@ -138,6 +139,7 @@ def parse_qemu_arguments(runfile_args: List[str]) -> argparse.Namespace:
         errors.append(msg)
     parser.error = _error
 
+    parser.add_argument("-s", action="store_true")
     parser.add_argument("-nographic", action="store_true")
     parser.add_argument("-no-reboot", action="store_true")
     parser.add_argument("-no-shutdown", action="store_true")

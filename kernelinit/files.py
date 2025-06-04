@@ -1,13 +1,18 @@
 import os
 import re
+import sys
 import shutil
 import subprocess
 
 import argparse
 import threading
+import logging
+import traceback
 
 import libarchive
 from typing import Optional
+from vmlinux_to_elf.vmlinuz_decompressor import obtain_raw_kernel_from_file
+from vmlinux_to_elf.elf_symbolizer import ElfSymbolizer
 
 from .utils import get_file, info, error, debug, unparameterize, TEMPLATES_DIR
 from .runfile import RunFile
@@ -98,25 +103,20 @@ def extract_vmlinux(runfile: RunFile):
         shutil.move("vmlinux", "vmlinux - backup")
 
     info("Extracting vmlinux...")
-    out = b''
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO if hasattr(debug, 'verbose') and debug.verbose else logging.ERROR, format='%(message)s')
     try:
-        out = subprocess.run(['vmlinux-to-elf', '--', runfile.args.kernel, 'vmlinux'],
-                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
-    except FileNotFoundError:
-        error("Missing vmlinux-to-elf in PATH")
-
-    if b'Successfully wrote the new ELF kernel' in out:
-        info('Successfully extracted vmlinux')
-    else:
+        ElfSymbolizer(obtain_raw_kernel_from_file(open(runfile.args.kernel, 'rb').read()), 'vmlinux', None, None, None, None)
+    except Exception:
         error('Failed extracting vmlinux using vmlinux-to-elf')
-        if out:
-            debug("vmlinux-to-elf output:\n" + out.decode())
+        traceback.print_exc()
+
         out = subprocess.check_output([os.path.join(TEMPLATES_DIR, "..", "extract-vmlinux"), runfile.args.kernel])
         with open('vmlinux', 'wb') as f:
             f.write(out)
         info("Successfully extracted vmlinux using extract-vmlinux")
-
-    inspect_kernel_config()
+    else:
+        info('Successfully extracted vmlinux')
+        inspect_kernel_config()
 
 
 def inspect_kernel_config():
