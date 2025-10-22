@@ -11,8 +11,8 @@ import traceback
 
 import libarchive
 from typing import Optional
-from vmlinux_to_elf.vmlinuz_decompressor import obtain_raw_kernel_from_file
-from vmlinux_to_elf.elf_symbolizer import ElfSymbolizer
+from vmlinux_to_elf.core.vmlinuz_decompressor import obtain_raw_kernel_from_file
+from vmlinux_to_elf.core.elf_symbolizer import ElfSymbolizer
 
 from .utils import get_file, info, error, debug, unparameterize, TEMPLATES_DIR
 from .runfile import RunFile
@@ -105,7 +105,7 @@ def extract_vmlinux(runfile: RunFile):
     info("Extracting vmlinux...")
     logging.basicConfig(stream=sys.stdout, level=logging.INFO if hasattr(debug, 'verbose') and debug.verbose else logging.ERROR, format='%(message)s')
     try:
-        ElfSymbolizer(obtain_raw_kernel_from_file(open(runfile.args.kernel, 'rb').read()), 'vmlinux', None, None, None, None)
+        ElfSymbolizer(obtain_raw_kernel_from_file(open(runfile.args.kernel, 'rb').read()), 'vmlinux')
     except Exception:
         error('Failed extracting vmlinux using vmlinux-to-elf')
         traceback.print_exc()

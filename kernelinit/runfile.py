@@ -151,6 +151,7 @@ def parse_qemu_arguments(runfile_args: List[str]) -> argparse.Namespace:
     parser.add_argument("-initrd")
     parser.add_argument("-append")
     parser.add_argument("-m")
+    parser.add_argument("-M")
     parser.add_argument("-cpu")
     parser.add_argument("-smp")
     parser.add_argument("-serial")
