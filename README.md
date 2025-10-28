@@ -2,14 +2,16 @@
 A tool for automating setup of kernel pwn challenges.
 
 ## Installation
+Install the prerequisites. On Ubuntu, they can be installed with
+```
+sudo apt install pipx libarchive-dev gdb build-essential
+```
+
+Install kernelinit with pipx:
 ```sh
 pipx install git+https://github.com/Myldero/kernelinit
 ```
 
-Currently, `kernelinit` depends on libarchive. On Ubuntu, it can be installed with
-```
-sudo apt install libarchive-dev
-```
 
 ## Usage
 Just run `kernelinit` in the directory of the challenge. It should hopefully automatically locate the relevant files and create the setup.

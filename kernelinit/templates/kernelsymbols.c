@@ -679,16 +679,16 @@ struct cpuinfo_x86 {
 struct file {};  // Pass debug info check in pwndbg
 
 
-struct list_head slab_caches;
-unsigned long max_pfn;
-struct cpuinfo_x86 boot_cpu_data;
-char linux_banner[1];
+extern struct list_head slab_caches;
+extern unsigned long max_pfn;
+extern struct cpuinfo_x86 boot_cpu_data;
+extern char linux_banner[1];
 #ifdef CONFIG_SMP
-unsigned int nr_cpu_ids;
-unsigned long __per_cpu_offset[NR_CPUS];
+extern unsigned int nr_cpu_ids;
+extern unsigned long __per_cpu_offset[NR_CPUS];
 #endif
 
-nodemask_t node_states[NR_NODE_STATES];
+extern nodemask_t node_states[NR_NODE_STATES];
 
 
 struct kmem_cache __kmem_cache;

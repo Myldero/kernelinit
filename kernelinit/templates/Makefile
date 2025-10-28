@@ -8,7 +8,7 @@ OBJECTS = $(SOURCES:.c=.o)
 LIBS = -lpthread
 
 kernelinit/kernelsymbols.o: kernelinit/kernelconfig.h
-	gcc -c -g -I./kernelinit "TEMPLATES_DIR/kernelsymbols.c" -o $@
+	gcc -c -g -fno-eliminate-unused-debug-types -I./kernelinit "TEMPLATES_DIR/kernelsymbols.c" -o $@
 
 debug: kernelinit/kernelsymbols.o
 	gdb -x kernelinit/debug.gdb
