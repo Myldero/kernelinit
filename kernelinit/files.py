@@ -274,7 +274,7 @@ def inspect_kernel_config():
     version_str = None
 
     if 'linux_banner' in symbols:
-        if m := re.search(r'0x[0-9a-f]+:\s*"Linux[\sA-Za-z]+([0-9]+\.[0-9\.]+)(-rc[0-9+])?', gdb.exec(f'x/s &linux_banner')):
+        if m := re.search(r'0x[0-9a-f]+:\s*"Linux[\sA-Za-z]+([0-9]+\.[0-9\.]+)((?:-rc[0-9+])?)', gdb.exec(f'x/s &linux_banner')):
             version_str = m[1]+m[2]
             version = tuple(int(i) for i in m[1].split("."))
             version_num = version[0]*1000 + version[1]
