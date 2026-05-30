@@ -1,9 +1,10 @@
 from typing import List, Optional
+from pathlib import Path
 import glob
 import os
 
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates')
+TEMPLATES_DIR = Path(__file__).resolve().parent / 'templates'
 
 
 def get_file(expr: str) -> Optional[str]:
@@ -44,7 +45,7 @@ def parameterize(cmd: str) -> List[str]:
         else:
             curr += c
     if quote:
-        raise Exception("Unfinished quote")
+        raise SyntaxError("Unfinished quote")
 
     if curr:
         out.append(curr)

@@ -1,13 +1,11 @@
 #include <stdint.h>
 #include <kernelconfig.h>
 
-#ifdef CONFIG_X86_64
-
 //#define CONFIG_DEBUG_LOCK_ALLOC (Not supported)
 //#define CONFIG_DEBUG_KOBJECT_RELEASE (Not supported)
 
 
-#define NR_CPUS CONFIG_NR_CPUS_DEFAULT
+#define NR_CPUS CONFIG_NR_CPUS
 
 typedef void UNDEFINED;
 
@@ -585,7 +583,7 @@ enum pageflags {
 };
 
 
-
+#ifdef CONFIG_X86_64
 
 #define NVMXINTS			5
 #define NCAPINTS			22	   /* N 32-bit words worth of info */
@@ -674,6 +672,9 @@ struct cpuinfo_x86 {
 	unsigned		initialized : 1;
 };
 
+extern struct cpuinfo_x86 boot_cpu_data;
+
+#endif /* CONFIG_x86_64 */
 
 
 struct file {};  // Pass debug info check in pwndbg
@@ -681,7 +682,6 @@ struct file {};  // Pass debug info check in pwndbg
 
 extern struct list_head slab_caches;
 extern unsigned long max_pfn;
-extern struct cpuinfo_x86 boot_cpu_data;
 extern char linux_banner[1];
 #ifdef CONFIG_SMP
 extern unsigned int nr_cpu_ids;
@@ -695,5 +695,3 @@ struct kmem_cache __kmem_cache;
 struct file __file;
 struct page __page;
 enum pageflags test;
-
-#endif /* CONFIG_x86_64 */

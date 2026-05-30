@@ -45,7 +45,7 @@ def do_unintended_checks(runfile: RunFile):
         if 'cannot access' in out:
             return
         elif f'{dirname} -> ' in out:
-            new_name = re.findall(f'{dirname} -> (.*\S)', out)[0]
+            new_name = re.findall(fr'{dirname} -> (.*\S)', out)[0]
             get_writable(os.path.normpath(os.path.join(os.path.dirname(dirname), new_name)), message)
             return
         perms, _, fuid, fgid, *_ = out.split()

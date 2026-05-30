@@ -38,11 +38,12 @@ class RunFile:
         if self.args.monitor is None or self.args.serial == 'mon:stdio':
             important("Unintended using QEMU Monitor")
 
-        if not any(i in cpu_args for i in ('smep', '+smep')):
-            info("No SMEP")
+        if self.arch == 'x86_64':
+            if not any(i in cpu_args for i in ('smep', '+smep')):
+                info("No SMEP")
 
-        if not any(i in cpu_args for i in ('smap', '+smap')):
-            info("No SMAP")
+            if not any(i in cpu_args for i in ('smap', '+smap')):
+                info("No SMAP")
 
         if self.args.smp:
             if self.args.smp.isdigit():
